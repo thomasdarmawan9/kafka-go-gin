@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: users-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: users
+  template:
+    metadata:
+      labels:
+        component: users
+    spec:
+      containers:
+        - name: users
+          image: airelljordan98/users:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DBDRIVER
+              value: postgres
+            - name: USERNAME
+              value: postgres
+            - name: HOST
+              value: users-postgres-srv
+            - name: PORT
+              value: "5432"
+            - name: DATABASE
+              value: users_db
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: users-srv
+spec:
+  selector:
+    component: users
+  ports:
+    - port: 8080
+      targetPort: 8080

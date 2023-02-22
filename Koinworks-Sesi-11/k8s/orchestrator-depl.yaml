@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: orchestrator
+  template:
+    metadata:
+      labels:
+        component: orchestrator
+    spec:
+      containers:
+        - name: orchestrator
+          image: airelljordan98/orchestrator:latest
+          env:
+            - name: BROKER_ADDRESS
+              value: kafka-srv

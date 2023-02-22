@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foods-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: foods
+  template:
+    metadata:
+      labels:
+        component: foods
+    spec:
+      containers:
+        - name: foods
+          image: airelljordan98/foods:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: DBDRIVER
+              value: postgres
+            - name: USERNAME
+              value: postgres
+            - name: HOST
+              value: foods-postgres-srv
+            - name: PORT
+              value: "5432"
+            - name: DATABASE
+              value: "foods_db"
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+            - name: BROKER_ADDRESS
+              value: kafka-srv
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foods-srv
+spec:
+  selector:
+    component: foods
+  ports:
+    - port: 8081
+      targetPort: 8081

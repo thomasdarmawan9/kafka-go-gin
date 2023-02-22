@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-postgres-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: orders-postgres
+  template:
+    metadata:
+      labels:
+        component: orders-postgres
+    spec:
+      volumes:
+        - name: orders-postgres-storage
+          persistentVolumeClaim:
+            claimName: database-persistent-volume-claim
+      containers:
+        - name: orders-postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: orders-postgres-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: orders-postgres
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: "orders_db"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-postgres-srv
+spec:
+  type: ClusterIP
+  selector:
+    component: orders-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foods-postgres-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: foods-postgres
+  template:
+    metadata:
+      labels:
+        component: foods-postgres
+    spec:
+      volumes:
+        - name: foods-postgres-storage
+          persistentVolumeClaim:
+            claimName: database-persistent-volume-claim
+      containers:
+        - name: foods-postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: foods-postgres-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: foods-postgres
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: "foods_db"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foods-postgres-srv
+spec:
+  type: ClusterIP
+  selector:
+    component: foods-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

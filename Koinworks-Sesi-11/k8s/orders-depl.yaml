@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: orders
+  template:
+    metadata:
+      labels:
+        component: orders
+    spec:
+      containers:
+        - name: orders
+          image: airelljordan98/orders:latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: DBDRIVER
+              value: postgres
+            - name: USERNAME
+              value: postgres
+            - name: HOST
+              value: orders-postgres-srv
+            - name: PORT
+              value: "5432"
+            - name: DATABASE
+              value: "orders_db"
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
+            - name: BROKER_ADDRESS
+              value: kafka-srv
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-srv
+spec:
+  selector:
+    component: orders
+  ports:
+    - port: 8082
+      targetPort: 8082
